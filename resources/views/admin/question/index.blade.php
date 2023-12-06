@@ -24,6 +24,9 @@
                                 Question
                             </th>
                             <th scope="col" class="px-6 py-3">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3">
                                 <span class="sr-only">#</span>
                             </th>
                         </tr>
@@ -36,10 +39,17 @@
                                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $item->question ?? 'N/A' }}
                                 </th>
+                                <th scope="row"
+                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+
+                                    <span
+                                        class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">{{ $item->status }}</span>
+
+                                </th>
                                 <th scope="col" class="px-6 py-3">
                                     <div class="flex justify-end space-x-2">
                                         <a href="{{ route('question.edit', ['question' => $item->id]) }}"
-                                            class="font-medium text-blue-600 dark:text-blue-500 hover:underline update-category">
+                                            class="font-medium text-indigo-600 dark:text-indigo-500 hover:underline update-category">
                                             Edit
                                         </a>
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(Category::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->text('question');
+            $table->enum('status', ['pending', 'approved', 'reject'])->default('pending');
             $table->softDeletes();
             $table->timestamps();
         });
