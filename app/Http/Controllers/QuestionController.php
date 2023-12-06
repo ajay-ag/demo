@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Requests\UpdateQuestionRequest;
 use App\Models\Answer;
+use App\Models\Category;
 use App\Models\Question;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class QuestionController extends Controller
 {
@@ -25,7 +27,11 @@ class QuestionController extends Controller
      */
     public function create()
     {
-        return view('admin.question.create', []);
+        $data['categories'] = Cache::remember('categories', 3600, function () {
+            return Category::all();
+        });
+
+        return view('admin.question.create', $data);
     }
 
     /**
@@ -36,6 +42,7 @@ class QuestionController extends Controller
         $question = Question::create([
             'question' => $request->question,
             'user_id' => Auth::id(),
+            'category_id' => $request->category_id,
         ]);
 
         foreach ($request->fields as $key => $value) {
@@ -50,6 +57,7 @@ class QuestionController extends Controller
             'message' => 'Question created successfully',
             'success' => true,
             'question' => $question,
+            'back' => route('question.index'),
         ]);
     }
 
@@ -66,7 +74,10 @@ class QuestionController extends Controller
      */
     public function edit(Question $question)
     {
-        $data['question'] = $question;
+        $data['question'] = $question->load('category', 'answer');
+        $data['categories'] = Cache::remember('categories', 3600, function () {
+            return Category::all();
+        });
 
         return view('admin.question.edit', $data);
     }
@@ -76,7 +87,42 @@ class QuestionController extends Controller
      */
     public function update(UpdateQuestionRequest $request, Question $question)
     {
-        //
+        $question->question = $request->question;
+        $question->category_id = $request->category_id;
+        $question->save();
+
+        //check Array is empty then delete all
+        if (count($request->fields) === 0) {
+
+            $question->answer()->delete();
+
+            return response()->json([
+                'message' => 'Question updated successfully',
+                'success' => true,
+                'question' => $question,
+                'back' => route('question.index'),
+            ]);
+
+        }
+
+        //remove all record and update all record that have id and create
+        $toDeleteId = collect($question->fields)->whereNotNull('id')->all();
+        $delete = collect($question->answer()->pluck('id'))->whereNotIn('id', $toDeleteId)->all();
+        $question->answer()->whereIn('id', $delete)->delete();
+        foreach ($request->fields as $key => $value) {
+            Answer::updateOrCreate(['id' => $value['id'] ?? 0], [
+                'ans' => $value['ans'],
+                'date' => $value['date'],
+                'question_id' => $question->id,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Question updated successfully',
+            'success' => true,
+            'question' => $question,
+            'back' => route('question.index'),
+        ]);
     }
 
     /**

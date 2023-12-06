@@ -17,10 +17,22 @@
                 <div class="mb-2">
                     <x-alert type="success" />
                 </div>
-                <div class="mt-3 mb-2">
-                    <x-input-label for="update_category" :value="__('Category')" />
-                    <x-text-input x-model="question" class="block mt-1 w-full" type="text" name="question" required
-                        autofocus />
+                <div class="mt-3 mb-2 flex space-x-5 ">
+                    <div class="w-1/2">
+                        <x-input-label for="question" :value="__('Question')" />
+                        <x-text-input x-model="question" id="question" class="block mt-1 w-full" type="text"
+                            name="question" required autofocus />
+                    </div>
+                    <div class="w-1/2">
+                        <x-input-label for="category" :value="__('Category')" />
+                        <select id="category" name="category"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
+                            placeholder="Select Category" x-model="category">
+                            @foreach ($categories as $key => $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name ?? '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
 
@@ -28,7 +40,7 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th scope="col" class="px-6 py-3 w-1/2">
-                                    Question
+                                    Answer
                                 </th>
                                 <th scope="col" class="px-6 py-3 w-1/2">
                                     Date
@@ -83,6 +95,7 @@
                         date: ''
                     }],
                     question: "",
+                    category: null,
                     addNewField() {
                         this.fields.push({
                             ans: '',
@@ -95,17 +108,26 @@
                     saveQuestion() {
                         const data = {
                             fields: this.fields,
-                            question: this.question
+                            question: this.question,
+                            category_id: this.category
                         };
 
                         fetch("{{ route('question.store') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify(data),
-                        })
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                },
+                                body: JSON.stringify(data),
+                            })
+                            .then((response) => response.json())
+                            .then(function(res) {
+                                Swal.fire({
+                                    text: res.message,
+                                }).then((result) => {
+                                    window.location.href = res.back;
+                                });
+                            })
                     }
                 }
             }
